@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Schulplaner Pro</title>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(120,119,198,0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,119,198,0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120,219,255,0.3) 0%, transparent 50%);
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(120deg); }
+            66% { transform: translateY(10px) rotate(240deg); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            padding: 32px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 35px 70px rgba(0,0,0,0.4);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .header h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .login-form { max-width: 420px; margin: 80px auto; }
+
+        .input-group { margin-bottom: 24px; position: relative; }
+
+        input[type="text"], input[type="password"], input[type="number"], select {
+            width: 100%;
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        option {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        input::placeholder { color: rgba(255, 255, 255, 0.6); }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 32px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            margin-bottom: 12px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-small {
+            width: auto !important;
+            padding: 10px 20px !important;
+            font-size: 14px !important;
+            margin: 4px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            box-shadow: 0 10px 30px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            box-shadow: 0 10px 30px rgba(245, 101, 101, 0.4);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px 28px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        .nav-btn.active, .nav-btn:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .content-area { display: none; }
+        .content-area.active { display: block; animation: slideIn 0.5s ease-out; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .semester-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .semester-card {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(240, 147, 251, 0.3) 100%);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .semester-card::before {
+            content: '👆 Klick mich!';
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .semester-card:hover::before {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .semester-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .semester-card.active {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.5) 0%, rgba(0, 242, 254, 0.5) 100%);
+            box-shadow: 0 30px 80px rgba(79, 172, 254, 0.5);
+            border-color: rgba(79, 172, 254, 0.8);
+        }
+
+        .grades-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .grades-table th {
+            background: rgba(102, 126, 234, 0.3);
+            padding: 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .grades-table td {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            vertical-align: top;
+        }
+
+        .grade-input {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            color: #fff;
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .grade-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .grades-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .grade-item {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.3);
+            color: white;
+            padding: 4px 12px;
+            margin: 2px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .avg-display {
+            background: linear-gradient(135deg, rgba(168, 237, 234, 0.4) 0%, rgba(254, 214, 227, 0.4) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 32px;
+            border-radius: 24px;
+            text-align: center;
+            margin-top: 32px;
+            font-size: 2.2em;
+            font-weight: 800;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            padding: 32px 24px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card h3 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .popup-card {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .export-buttons .btn {
+            width: auto;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .nav-buttons { flex-direction: column; }
+            .semester-grid { grid-template-columns: 1fr; }
+            .grades-table { font-size: 14px; }
+            .grades-table th, .grades-table td { padding: 12px; }
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="container">
+        <div class="glass-card login-form">
+            <h2 style="font-size: 2.2em; margin-bottom: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                👋 Willkommen zurück
+            </h2>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 32px;">Dein smarter Schulplaner</p>
+
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Benutzername" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Passwort" autocomplete="new-password">
+            </div>
+
+            <button class="btn" onclick="login()">Anmelden</button>
+            <button class="btn btn-success" onclick="register()">Registrieren</button>
+            <button class="btn" onclick="openResetPopup()">🔐 Passwort zurücksetzen</button>
+
+            <p id="loginError" style="color: #f56565; margin-top: 16px; display: none;">❌ Falscher Benutzername oder Passwort!</p>
+        </div>
+    </div>
+
+    <!-- REGISTER POPUP -->
+    <div id="registerPopup" class="popup-overlay">
+        <div class="glass-card popup-card">
+            <h2 style="font-size: 2em; margin-bottom: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                📝 Registrieren
+            </h2>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 24px;">Erstelle deinen Account</p>
+
+            <div class="input-group">
+                <input type="text" id="newUser" placeholder="Benutzername" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="newPass" placeholder="Passwort" autocomplete="new-password">
+            </div>
+            <div class="input-group">
+                <input type="text" id="securityAnswer" placeholder="Sicherheitsantwort (z. B. Name deines Haustiers)" autocomplete="off">
+            </div>
+
+            <button class="btn btn-success" onclick="createAccount()">✅ Account erstellen</button>
+            <button class="btn btn-danger" onclick="closeRegister()">❌ Abbrechen</button>
+        </div>
+    </div>
+
+    <!-- RESET POPUP -->
+    <div id="resetPopup" class="popup-overlay">
+        <div class="glass-card popup-card">
+            <h2 style="font-size: 2em; margin-bottom: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                🔐 Passwort zurücksetzen
+            </h2>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 24px;">Beantworte deine Sicherheitsfrage</p>
+
+            <div class="input-group">
+                <input type="text" id="resetUser" placeholder="Benutzername" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="resetAnswer" placeholder="Wie lautet deine Sicherheitsantwort?" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="resetNewPass" placeholder="Neues Passwort" autocomplete="new-password">
+            </div>
+
+            <button class="btn btn-success" onclick="resetPassword()">✅ Passwort speichern</button>
+            <button class="btn btn-danger" onclick="closeResetPopup()">❌ Abbrechen</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <div class="glass-card" style="padding: 40px;">
+                    <h1>📚 Schulplaner Pro</h1>
+                    <p style="font-size: 1.3em; color: rgba(255,255,255,0.8);">Dein perfekter Noten-Manager</p>
+                    <button class="btn btn-danger" onclick="logout()" style="width: auto; padding: 16px 32px; margin-top: 20px;">
+                        ❌ Ausloggen
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-card" style="margin-bottom: 40px;">
+                <div class="nav-buttons" id="navButtons">
+                    <button class="nav-btn active" onclick="showSection(event, 'semesters')">📅 Halbjahre</button>
+                    <button class="nav-btn" onclick="showSection(event, 'grades')">📝 Noten</button>
+                    <button class="nav-btn" onclick="showSection(event, 'stats')">📊 Statistik</button>
+                    <button class="nav-btn" onclick="showSection(event, 'subjects')">🎓 Fächer</button>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="btn btn-success" onclick="exportToExcel()">💾 Excel Export</button>
+                    <button class="btn" onclick="exportToPDF()">📄 PDF Export</button>
+                    <button class="btn" onclick="exportBackup()">🗂️ Backup exportieren</button>
+                    <label class="btn" style="width:auto; margin-bottom:0; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;">
+                        📥 Backup importieren
+                        <input type="file" id="importFile" accept=".json,application/json" onchange="importBackup(event)" style="display:none;">
+                    </label>
+                </div>
+            </div>
+
+            <div id="semesters" class="glass-card content-area active">
+                <h2 style="font-size: 2em; margin-bottom: 16px;">📅 Halbjahre verwalten</h2>
+                <p style="color: rgba(255,255,255,0.8); margin-bottom: 32px;">Klicke auf ein Halbjahr zum Bearbeiten oder 🗑️ zum Löschen</p>
+                <div id="semesterGrid" class="semester-grid"></div>
+                <button class="btn" onclick="addSemester()" style="margin-top: 32px;">
+                    ➕ Neues Halbjahr
+                </button>
+            </div>
+
+            <div id="grades" class="glass-card content-area">
+                <h2 style="font-size: 2em; margin-bottom: 24px;">📝 Noten eingeben</h2>
+                <div id="currentSemesterInfo" style="margin-bottom: 24px;"></div>
+                <table id="gradesTable" class="grades-table">
+                    <thead>
+                        <tr>
+                            <th>📚 Fach</th>
+                            <th>🎯 Neue Note</th>
+                            <th>📋 Alle Noten</th>
+                            <th>⚖️ Gewicht</th>
+                            <th>📈 Durchschnitt</th>
+                            <th>🛠️</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="semesterAvg" class="avg-display" style="display: none;"></div>
+            </div>
+
+            <div id="stats" class="glass-card content-area">
+                <h2 style="font-size: 2em; margin-bottom: 24px;">📊 Gesamtübersicht</h2>
+                <div id="overallAvg" class="avg-display"></div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="totalSubjects">0</h3>
+                        <p>Fächer gesamt</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalGrades">0</h3>
+                        <p>Noten eingetragen</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="bestGrade">0.0</h3>
+                        <p>Beste Note</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="currentTrend">🟡</h3>
+                        <p>Letzter Trend</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="subjects" class="glass-card content-area">
+                <h2 style="font-size: 2em; margin-bottom: 24px;">🎓 Fächer verwalten</h2>
+                <div id="subjectsList" style="margin-bottom: 32px;"></div>
+                <button class="btn" onclick="addSubject()">
+                    ➕ Neues Fach hinzufügen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userData = {
+            semesters: [],
+            subjects: ['Mathe', 'Deutsch', 'Englisch', 'Physik', 'Biologie', 'Chemie'],
+            currentUser: '',
+            gradesData: {},
+            weights: {}
+        };
+
+        let currentSemesterId = null;
+
+        function saveData() {
+            if (!userData.currentUser) return;
+            localStorage.setItem('schulplaner_' + userData.currentUser, JSON.stringify(userData));
+        }
+
+        function loadDataForUser(username) {
+            const saved = localStorage.getItem('schulplaner_' + username);
+
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                userData = {
+                    semesters: parsed.semesters || [],
+                    subjects: parsed.subjects || ['Mathe', 'Deutsch', 'Englisch', 'Physik', 'Biologie', 'Chemie'],
+                    currentUser: username,
+                    gradesData: parsed.gradesData || {},
+                    weights: parsed.weights || {}
+                };
+            } else {
+                userData = {
+                    semesters: [],
+                    subjects: ['Mathe', 'Deutsch', 'Englisch', 'Physik', 'Biologie', 'Chemie'],
+                    currentUser: username,
+                    gradesData: {},
+                    weights: {}
+                };
+            }
+        }
+
+        window.onload = function() {
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('mainApp').style.display = 'none';
+        };
+
+        function login() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const errorDiv = document.getElementById("loginError");
+
+            let users = JSON.parse(localStorage.getItem("users") || "{}");
+
+            if (username === "" || password === "") {
+                errorDiv.textContent = "❌ Bitte Benutzername und Passwort eingeben!";
+                errorDiv.style.display = "block";
+                return;
+            }
+
+            if (!users[username]) {
+                errorDiv.textContent = "❌ Account existiert nicht. Bitte zuerst registrieren!";
+                errorDiv.style.display = "block";
+                return;
+            }
+
+            const storedUser = users[username];
+            const storedPassword = typeof storedUser === 'string' ? storedUser : storedUser.password;
+
+            if (storedPassword !== password) {
+                errorDiv.textContent = "❌ Falsches Passwort!";
+                errorDiv.style.display = "block";
+                return;
+            }
+
+            loadDataForUser(username);
+
+            errorDiv.style.display = "none";
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("mainApp").style.display = "block";
+
+            if (userData.semesters.length === 0) {
+                addSemester(true, `Halbjahr 1`);
+                addSemester(true, `Halbjahr 2`);
+            } else {
+                loadSemesters();
+            }
+
+            currentSemesterId = userData.semesters[0]?.id || null;
+            if (currentSemesterId) {
+                loadSemesterGrades(currentSemesterId);
+            }
+
+            updateStats();
+        }
+
+        function register() {
+            document.getElementById("registerPopup").style.display = "flex";
+            document.getElementById("newUser").value = "";
+            document.getElementById("newPass").value = "";
+            document.getElementById("securityAnswer").value = "";
+        }
+
+        function createAccount() {
+            const username = document.getElementById("newUser").value.trim();
+            const password = document.getElementById("newPass").value.trim();
+            const securityAnswer = document.getElementById("securityAnswer").value.trim().toLowerCase();
+
+            if (username === "" || password === "" || securityAnswer === "") {
+                alert("❌ Bitte alles ausfüllen");
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem("users") || "{}");
+
+            if (users[username]) {
+                alert("❌ Benutzer existiert bereits");
+                return;
+            }
+
+            users[username] = {
+                password: password,
+                securityAnswer: securityAnswer
+            };
+
+            localStorage.setItem("users", JSON.stringify(users));
+
+            alert("✅ Account erstellt! Jetzt anmelden.");
+            closeRegister();
+        }
+
+        function closeRegister() {
+            document.getElementById("registerPopup").style.display = "none";
+        }
+
+        function openResetPopup() {
+            document.getElementById("resetPopup").style.display = "flex";
+            document.getElementById("resetUser").value = "";
+            document.getElementById("resetAnswer").value = "";
+            document.getElementById("resetNewPass").value = "";
+        }
+
+        function closeResetPopup() {
+            document.getElementById("resetPopup").style.display = "none";
+        }
+
+        function resetPassword() {
+            const username = document.getElementById("resetUser").value.trim();
+            const answer = document.getElementById("resetAnswer").value.trim().toLowerCase();
+            const newPassword = document.getElementById("resetNewPass").value.trim();
+
+            if (username === "" || answer === "" || newPassword === "") {
+                alert("❌ Bitte alles ausfüllen");
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem("users") || "{}");
+            const storedUser = users[username];
+
+            if (!storedUser) {
+                alert("❌ Benutzer nicht gefunden");
+                return;
+            }
+
+            if (typeof storedUser === 'string') {
+                alert("❌ Dieser ältere Account hat noch keine Sicherheitsfrage. Bitte neuen Account erstellen.");
+                return;
+            }
+
+            if ((storedUser.securityAnswer || "").toLowerCase() !== answer) {
+                alert("❌ Sicherheitsantwort ist falsch");
+                return;
+            }
+
+            users[username].password = newPassword;
+            localStorage.setItem("users", JSON.stringify(users));
+
+            alert("✅ Passwort wurde zurückgesetzt!");
+            closeResetPopup();
+        }
+
+        function logout() {
+            saveData();
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').style.display = 'none';
+            userData.currentUser = '';
+            currentSemesterId = null;
+        }
+
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && document.getElementById('registerPopup').style.display === 'flex') {
+                createAccount();
+                return;
+            }
+            if (e.key === 'Enter' && document.getElementById('resetPopup').style.display === 'flex') {
+                resetPassword();
+                return;
+            }
+            if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') {
+                login();
+            }
+        });
+
+        function showSection(ev, sectionId) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            if (ev && ev.target) ev.target.classList.add('active');
+
+            document.querySelectorAll('.content-area').forEach(area => area.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+
+            if (sectionId === 'stats') updateStats();
+            if (sectionId === 'subjects') loadSubjects();
+            if (sectionId === 'semesters') loadSemesters();
+            if (sectionId === 'grades' && currentSemesterId) loadSemesterGrades(currentSemesterId);
+        }
+
+        function addSemester(silentMode = false, presetName = null) {
+            const semesterId = 'hj' + Date.now() + Math.floor(Math.random() * 1000);
+            let semesterName = presetName;
+
+            if (!silentMode) {
+                const nameInput = prompt('Name des Halbjahrs (z.B. "11.1")');
+                semesterName = nameInput && nameInput.trim() ? nameInput.trim() : `Halbjahr ${userData.semesters.length + 1}`;
+            } else {
+                semesterName = presetName || `Halbjahr ${userData.semesters.length + 1}`;
+            }
+
+            userData.semesters.push({ id: semesterId, name: semesterName });
+            saveData();
+            loadSemesters();
+        }
+
+        function deleteSemester(semesterId) {
+            const sem = userData.semesters.find(s => s.id === semesterId);
+            if (!sem) return;
+
+            if (confirm(`🗑️ Wirklich "${sem.name}" löschen?\nAlle Noten gehen verloren!`)) {
+                userData.semesters = userData.semesters.filter(s => s.id !== semesterId);
+                delete userData.gradesData[semesterId];
+
+                if (currentSemesterId === semesterId) {
+                    currentSemesterId = userData.semesters[0]?.id || null;
+                }
+
+                saveData();
+                loadSemesters();
+
+                if (currentSemesterId) {
+                    loadSemesterGrades(currentSemesterId);
+                } else {
+                    document.querySelector('#gradesTable tbody').innerHTML = '';
+                    document.getElementById('currentSemesterInfo').innerHTML = '';
+                    document.getElementById('semesterAvg').style.display = 'none';
+                }
+
+                updateStats();
+                alert('✅ Halbjahr gelöscht!');
+            }
+        }
+
+        function loadSemesters() {
+            const grid = document.getElementById('semesterGrid');
+            grid.innerHTML = '';
+
+            userData.semesters.forEach(semester => {
+                const card = document.createElement('div');
+                card.className = 'semester-card';
+                if (currentSemesterId === semester.id) card.classList.add('active');
+
+                card.dataset.semesterId = semester.id;
+                const avg = calculateSemesterAvg(semester.id);
+
+                card.innerHTML = `
+                    <h3 style="font-size: 1.6em; margin-bottom: 12px;">${semester.name}</h3>
+                    <p style="font-size: 1.4em; font-weight: 700; margin-bottom: 8px; color: ${avg && avg < 8 ? '#48bb78' : '#f56565'};">
+                        ${avg ? avg.toFixed(2) : '0.00'}
+                    </p>
+                    <div style="position: absolute; top: 16px; right: 16px;">
+                        <button onclick="event.stopPropagation(); deleteSemester('${semester.id}')" 
+                                class="btn btn-danger btn-small">
+                            🗑️ Löschen
+                        </button>
+                    </div>
+                `;
+
+                card.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'BUTTON') return;
+
+                    document.querySelectorAll('.semester-card').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    currentSemesterId = semester.id;
+
+                    loadSemesterGrades(semester.id);
+                    showSection(null, 'grades');
+
+                    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.nav-btn')[1].classList.add('active');
+                });
+
+                grid.appendChild(card);
+            });
+        }
+
+        function normalizeGradeEntry(entry) {
+            if (typeof entry === 'number') {
+                return { value: entry, weight: 1 };
+            }
+
+            if (typeof entry === 'object' && entry !== null) {
+                return {
+                    value: Number(entry.value) || 0,
+                    weight: Number(entry.weight) || 1
+                };
+            }
+
+            return { value: 0, weight: 1 };
+        }
+
+        function getWeightLabel(weight) {
+            return Number(weight) === 2 ? '2/3' : '1/3';
+        }
+
+        function loadSemesterGrades(semesterId) {
+            const semester = userData.semesters.find(s => s.id === semesterId);
+            if (!semester) return;
+
+            document.getElementById('currentSemesterInfo').innerHTML =
+                `<h3 style="color: #667eea; font-size: 1.8em;">📋 ${semester.name}</h3>
+                 <p style="color: rgba(255,255,255,0.8);">Noten eingeben → Automatische Berechnung</p>`;
+
+            const tbody = document.querySelector('#gradesTable tbody');
+            tbody.innerHTML = '';
+
+            userData.subjects.forEach(subject => {
+                const rawGrades = userData.gradesData[semesterId]?.[subject] || [];
+                const grades = rawGrades.map(normalizeGradeEntry);
+                const avg = calculateSubjectAvg(semesterId, subject);
+                const color = avg ? (avg < 8 ? '#48bb78' : '#f56565') : '#e2e8f0';
+
+                const row = document.createElement('tr');
+                const lastGrade = grades.length > 0 ? grades[grades.length - 1].value : '';
+                const selectId = `weight-${semesterId}-${subject.replace(/\s+/g, '-')}`;
+
+                row.innerHTML = `
+                    <td style="font-weight: 600; font-size: 1.1em;">📚 ${subject}</td>
+                    <td>
+                        <input class="grade-input" type="number" step="0.1" min="0" max="15"
+                               value="${lastGrade}"
+                               onchange="addGrade('${semesterId}', '${subject}', this.value)"
+                               placeholder="Neue Note" onfocus="this.select()">
+                    </td>
+                    <td>
+                        <div class="grades-list" id="grades-${semesterId}-${subject.replace(/\s+/g, '-')}">
+                            ${grades.map(grade => `<span class="grade-item">${grade.value} (${getWeightLabel(grade.weight)})</span>`).join('')}
+                        </div>
+                        <small style="color: rgba(255,255,255,0.6);">${grades.length} Noten</small>
+                    </td>
+                    <td>
+                        <select class="grade-input" id="${selectId}" style="width:100%;">
+                            <option value="1">1/3</option>
+                            <option value="2">2/3</option>
+                        </select>
+                    </td>
+                    <td style="font-weight: bold; color: ${color}; font-size: 1.2em;">${avg ? avg.toFixed(2) : '-'}</td>
+                    <td>
+                        <button onclick="clearSubjectGrades('${semesterId}', '${subject}')"
+                                style="background: #f56565; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updateSemesterDisplay(semesterId);
+        }
+
+        function addGrade(semesterId, subject, grade) {
+            const val = parseFloat(grade);
+            if (Number.isNaN(val)) return;
+            if (val < 0 || val > 15) {
+                alert('❌ Bitte eine Note zwischen 0 und 15 eingeben.');
+                loadSemesterGrades(semesterId);
+                return;
+            }
+
+            const selectId = `weight-${semesterId}-${subject.replace(/\s+/g, '-')}`;
+            const weightSelect = document.getElementById(selectId);
+            const weight = weightSelect ? Number(weightSelect.value) : 1;
+
+            if (!userData.gradesData[semesterId]) userData.gradesData[semesterId] = {};
+            if (!userData.gradesData[semesterId][subject]) userData.gradesData[semesterId][subject] = [];
+
+            userData.gradesData[semesterId][subject].push({
+                value: val,
+                weight: weight
+            });
+
+            saveData();
+            loadSemesterGrades(semesterId);
+            loadSemesters();
+            updateStats();
+        }
+
+        function updateSemesterDisplay(semesterId) {
+            const avg = calculateSemesterAvg(semesterId);
+            const avgDiv = document.getElementById('semesterAvg');
+            avgDiv.innerHTML = `<span style="font-size: 0.6em; display: block; opacity: 0.8;">Halbjahr-Durchschnitt:</span>${avg ? avg.toFixed(2) : '0.00'}`;
+            avgDiv.style.display = 'block';
+        }
+
+        function calculateSemesterAvg(semesterId) {
+            let totalSum = 0;
+            let totalCount = 0;
+
+            if (!userData.gradesData[semesterId]) return 0;
+
+            userData.subjects.forEach(subject => {
+                const avg = calculateSubjectAvg(semesterId, subject);
+                if (avg > 0) {
+                    totalSum += avg;
+                    totalCount++;
+                }
+            });
+
+            return totalCount > 0 ? totalSum / totalCount : 0;
+        }
+
+        function calculateSubjectAvg(semesterId, subject) {
+            const rawGrades = userData.gradesData[semesterId]?.[subject] || [];
+            const grades = rawGrades.map(normalizeGradeEntry);
+
+            if (grades.length === 0) return 0;
+
+            let weightedSum = 0;
+            let weightSum = 0;
+
+            grades.forEach(g => {
+                weightedSum += g.value * g.weight;
+                weightSum += g.weight;
+            });
+
+            return weightSum > 0 ? weightedSum / weightSum : 0;
+        }
+
+        function clearSubjectGrades(semesterId, subject) {
+            if (confirm('Alle Noten dieses Fachs löschen?')) {
+                if (userData.gradesData[semesterId]) {
+                    delete userData.gradesData[semesterId][subject];
+                    saveData();
+                    loadSemesterGrades(semesterId);
+                    loadSemesters();
+                    updateStats();
+                }
+            }
+        }
+
+        function updateStats() {
+            const allGrades = [];
+            let totalSubjectsWithGrades = 0;
+            let lastTwoGrades = [];
+
+            Object.values(userData.gradesData || {}).forEach(semesterGrades => {
+                Object.values(semesterGrades).forEach(grades => {
+                    const normalized = grades.map(normalizeGradeEntry);
+
+                    normalized.forEach(g => allGrades.push(g.value));
+
+                    if (normalized.length > 0) {
+                        totalSubjectsWithGrades++;
+                        lastTwoGrades.push(...normalized.map(g => g.value));
+                    }
+                });
+            });
+
+            const overallAvg = allGrades.length > 0
+                ? allGrades.reduce((a, b) => a + b, 0) / allGrades.length
+                : 0;
+
+            document.getElementById('overallAvg').innerHTML =
+                `<span style="font-size: 0.6em; display: block; opacity: 0.8;">Gesamt-Durchschnitt:</span>${overallAvg.toFixed(2)}`;
+
+            document.getElementById('totalGrades').textContent = allGrades.length;
+            document.getElementById('totalSubjects').textContent = totalSubjectsWithGrades;
+            document.getElementById('bestGrade').textContent =
+                allGrades.length > 0 ? Math.max(...allGrades).toFixed(1) : '0.0';
+
+            let trend = '🟡';
+            if (lastTwoGrades.length >= 2) {
+                const last = lastTwoGrades[lastTwoGrades.length - 1];
+                const prev = lastTwoGrades[lastTwoGrades.length - 2];
+
+                if (last > prev) trend = '🟢';
+                else if (last < prev) trend = '🔴';
+            }
+
+            document.getElementById('currentTrend').textContent = trend;
+        }
+
+        function loadSubjects() {
+            const list = document.getElementById('subjectsList');
+            list.innerHTML = '';
+
+            userData.subjects.forEach((subject, index) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 16px; background: rgba(255,255,255,0.05); margin-bottom: 12px; border-radius: 12px;';
+                div.innerHTML = `
+                    <span style="font-size: 1.2em;">📚 ${subject}</span>
+                    <button onclick="removeSubject(${index})" style="background: #f56565; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;">Entfernen</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function addSubject() {
+            const newSubject = prompt('Neues Fach:');
+            if (newSubject && !userData.subjects.includes(newSubject)) {
+                userData.subjects.push(newSubject);
+                saveData();
+                loadSubjects();
+
+                if (currentSemesterId) {
+                    loadSemesterGrades(currentSemesterId);
+                }
+            }
+        }
+
+        function removeSubject(index) {
+            if (confirm('Fach wirklich löschen?')) {
+                const removedSubject = userData.subjects[index];
+                userData.subjects.splice(index, 1);
+
+                Object.keys(userData.gradesData).forEach(semesterId => {
+                    if (userData.gradesData[semesterId][removedSubject]) {
+                        delete userData.gradesData[semesterId][removedSubject];
+                    }
+                });
+
+                saveData();
+                loadSubjects();
+                loadSemesters();
+
+                if (currentSemesterId) {
+                    loadSemesterGrades(currentSemesterId);
+                }
+
+                updateStats();
+            }
+        }
+
+        function exportToExcel() {
+            let rows = [
+                ["Halbjahr", "Fach", "Note", "Gewichtung"]
+            ];
+
+            Object.keys(userData.gradesData).forEach(semesterId => {
+                const semester = userData.semesters.find(s => s.id === semesterId);
+                const semesterName = semester ? semester.name : semesterId;
+
+                Object.keys(userData.gradesData[semesterId]).forEach(subject => {
+                    userData.gradesData[semesterId][subject].forEach(grade => {
+                        const normalized = normalizeGradeEntry(grade);
+                        rows.push([
+                            semesterName,
+                            subject,
+                            normalized.value,
+                            getWeightLabel(normalized.weight)
+                        ]);
+                    });
+                });
+            });
+
+            let csvContent = rows.map(row => row.join(";")).join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+
+            link.href = URL.createObjectURL(blob);
+            link.download = "schulplaner_daten.csv";
+            link.click();
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            let y = 20;
+
+            doc.setFontSize(18);
+            doc.text("Schulplaner Daten", 20, y);
+            y += 12;
+
+            Object.keys(userData.gradesData).forEach(semesterId => {
+                const semester = userData.semesters.find(s => s.id === semesterId);
+                const semesterName = semester ? semester.name : semesterId;
+
+                if (y > 260) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                doc.setFontSize(14);
+                doc.text("Halbjahr: " + semesterName, 20, y);
+                y += 10;
+
+                Object.keys(userData.gradesData[semesterId]).forEach(subject => {
+                    const grades = userData.gradesData[semesterId][subject]
+                        .map(normalizeGradeEntry)
+                        .map(g => `${g.value} (${getWeightLabel(g.weight)})`)
+                        .join(", ");
+
+                    if (y > 280) {
+                        doc.addPage();
+                        y = 20;
+                    }
+
+                    doc.setFontSize(11);
+                    doc.text(`${subject}: ${grades}`, 25, y);
+                    y += 8;
+                });
+
+                y += 8;
+            });
+
+            doc.save("schulplaner.pdf");
+        }
+
+        function exportBackup() {
+            if (!userData.currentUser) {
+                alert("❌ Kein Benutzer angemeldet.");
+                return;
+            }
+
+            const backupData = {
+                app: "Schulplaner Pro",
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                user: userData.currentUser,
+                data: userData
+            };
+
+            const blob = new Blob(
+                [JSON.stringify(backupData, null, 2)],
+                { type: "application/json" }
+            );
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `schulplaner_backup_${userData.currentUser}.json`;
+            link.click();
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+
+                    if (!imported.data) {
+                        alert("❌ Ungültige Backup-Datei.");
+                        return;
+                    }
+
+                    const importedData = imported.data;
+                    const username = importedData.currentUser || userData.currentUser;
+
+                    if (!username) {
+                        alert("❌ Benutzer im Backup nicht gefunden.");
+                        return;
+                    }
+
+                    userData = {
+                        semesters: importedData.semesters || [],
+                        subjects: importedData.subjects || ['Mathe', 'Deutsch', 'Englisch', 'Physik', 'Biologie', 'Chemie'],
+                        currentUser: username,
+                        gradesData: importedData.gradesData || {},
+                        weights: importedData.weights || {}
+                    };
+
+                    localStorage.setItem('schulplaner_' + username, JSON.stringify(userData));
+
+                    if (currentUserMatchesLogin(username)) {
+                        currentSemesterId = userData.semesters[0]?.id || null;
+                        loadSemesters();
+                        updateStats();
+
+                        if (currentSemesterId) {
+                            loadSemesterGrades(currentSemesterId);
+                        } else {
+                            document.querySelector('#gradesTable tbody').innerHTML = '';
+                            document.getElementById('currentSemesterInfo').innerHTML = '';
+                            document.getElementById('semesterAvg').style.display = 'none';
+                        }
+                    }
+
+                    alert(`✅ Backup erfolgreich importiert für "${username}"`);
+                } catch (error) {
+                    console.error(error);
+                    alert("❌ Fehler beim Importieren der Datei.");
+                } finally {
+                    event.target.value = "";
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        function currentUserMatchesLogin(username) {
+            const currentLoginName = document.getElementById('username')?.value?.trim();
+            return userData.currentUser === username || currentLoginName === username || document.getElementById('mainApp').style.display !== 'none';
+        }
+    </script>
+</body>
+</html>
